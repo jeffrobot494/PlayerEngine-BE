@@ -75,7 +75,8 @@ public class Player2APIService {
       try {
          Map<String, JsonElement> responseMap = sendRequest(
                "/v1/selected_characters", false, null);
-         return CharacterUtils.parseFirstCharacter(responseMap);
+         //return CharacterUtils.parseFirstCharacter(responseMap);
+         return CharacterUtils.DEFAULT_CHARACTER;
       } catch (Exception var2) {
          return CharacterUtils.DEFAULT_CHARACTER;
       }
