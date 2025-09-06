@@ -16,6 +16,7 @@ import adris.altoclef.commands.HeroCommand;
 import adris.altoclef.commands.IdleCommand;
 import adris.altoclef.commands.LocateStructureCommand;
 import adris.altoclef.commands.MeatCommand;
+import adris.altoclef.commands.PlaceCommand;
 import adris.altoclef.commands.ReloadSettingsCommand;
 import adris.altoclef.commands.ResetMemoryCommand;
 import adris.altoclef.commands.SetAIBridgeEnabledCommand;
@@ -38,6 +39,7 @@ public class AltoClefCommands {
             new StopCommand(),
             new FoodCommand(),
             new MeatCommand(),
+            new PlaceCommand(),
             new ReloadSettingsCommand(),
             new ResetMemoryCommand(),
             new GamerCommand(),

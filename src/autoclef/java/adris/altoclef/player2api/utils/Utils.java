@@ -5,6 +5,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
+import com.google.gson.stream.JsonReader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -59,8 +61,23 @@ public class Utils {
 
    public static JsonObject parseCleanedJson(String content) throws JsonSyntaxException {
       content = content.replaceAll("^```json\\s*", "").replaceAll("\\s*```$", "").trim();
-      JsonParser parser = new JsonParser();
-      return parser.parse(content).getAsJsonObject();
+      
+      // Try strict parsing first
+      try {
+         JsonParser parser = new JsonParser();
+         return parser.parse(content).getAsJsonObject();
+      } catch (Exception e) {
+         // If strict parsing fails, try lenient parsing
+         try {
+            JsonReader reader = new JsonReader(new StringReader(content));
+            reader.setLenient(true);
+            JsonParser parser = new JsonParser();
+            return parser.parse(reader).getAsJsonObject();
+         } catch (Exception leninetException) {
+            // If both fail, throw the original exception with more context
+            throw new JsonSyntaxException("Failed to parse JSON content: '" + content + "'. Original error: " + e.getMessage(), e);
+         }
+      }
    }
 
    public static String[] splitLinesToArray(String input) {

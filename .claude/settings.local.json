@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Read(//mnt/c/Users/jeffr/OneDrive/Documents/player2-sir-roderick/src/main/java/com/goodbird/player2npc/**)"
     ],
     "deny": [],
     "ask": []
