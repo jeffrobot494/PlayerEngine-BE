@@ -33,6 +33,7 @@ public class TaskRunner {
 
          if (this.cachedCurrentTaskChain != null && maxChain != this.cachedCurrentTaskChain) {
             this.cachedCurrentTaskChain.onInterrupt(maxChain);
+            Debug.logMessage("Chain Switch: " + this.cachedCurrentTaskChain.getName() + " → " + (maxChain != null ? maxChain.getName() : "None"));
          }
 
          this.cachedCurrentTaskChain = maxChain;

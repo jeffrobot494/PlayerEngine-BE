@@ -35,7 +35,10 @@ public abstract class Task {
          if (newSub != null) {
             if (!newSub.isEqual(this.sub) && this.canBeInterrupted(this.sub, newSub)) {
                if (this.sub != null) {
+                  Debug.logMessage("Subtask Change [" + this.getClass().getSimpleName() + "]: " + this.sub + " → " + newSub);
                   this.sub.stop(newSub);
+               } else {
+                  Debug.logMessage("Subtask Start [" + this.getClass().getSimpleName() + "]: " + newSub);
                }
 
                this.sub = newSub;
@@ -43,6 +46,7 @@ public abstract class Task {
 
             this.sub.tick(parentChain);
          } else if (this.sub != null && this.canBeInterrupted(this.sub, null)) {
+            Debug.logMessage("Subtask End [" + this.getClass().getSimpleName() + "]: " + this.sub + " (no replacement)");
             this.sub.stop();
             this.sub = null;
          }
