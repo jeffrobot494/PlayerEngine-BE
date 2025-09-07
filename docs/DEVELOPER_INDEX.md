@@ -314,4 +314,95 @@ commands/
 
 ---
 
+## 🔧 Recent Modifications & Enhancements
+
+This section documents significant changes made to improve PlayerEngine functionality and fix critical issues.
+
+### **1. Enhanced Task Change Logging** 
+**Files Modified**: `SingleTaskChain.java:55`, `Task.java:38,41,49`, `TaskRunner.java:36`
+- **Added comprehensive task transition logging** to terminal output
+- **Chain switches**: `Chain Switch: Food Chain → User Tasks`  
+- **Main task changes**: `Task Change [User Tasks]: GetItemTask → PlaceBlockTask`
+- **Subtask changes**: `Subtask Start [GetItemTask]: MineAndCollectTask`
+- **Uses `Debug.logInternal()`** for live terminal visibility (not log files)
+- **Benefit**: Real-time debugging of AI decision-making process
+
+### **2. PlaceCommand Implementation**
+**Files Added**: `PlaceCommand.java`, **Modified**: `AltoClefCommands.java:19,42`
+- **New LLM command**: `place <block> [x y z]` for block placement
+- **Dual modes**: Specific coordinates or nearby placement  
+- **Smart block parsing**: Handles aliases like "wood" → "oak_planks"
+- **Integration**: Uses existing `PlaceBlockTask` and `PlaceBlockNearbyTask`
+- **Usage**: `place stone 100 64 200` or `place cobblestone` (nearby)
+- **Benefit**: Enables AI to build structures through LLM commands
+
+### **3. Entity Self-Position Awareness**
+**File Modified**: `AgentStatus.java:10`
+- **Added "my-position" field** to LLM prompt data
+- **Format**: `"my-position": "(100, 64, -50)"`
+- **Critical missing data**: AI now knows where it is in the world
+- **Enables spatial reasoning**: Distance calculations, relative positioning
+- **Benefit**: Dramatically improves building, navigation, and spatial tasks
+
+### **4. JSON Parsing Resilience** 
+**File Modified**: `Utils.java:69-95` *(Note: Incomplete due to build errors)*
+- **Added lenient JSON parsing** for malformed LLM responses
+- **Fallback system**: Strict parsing → lenient parsing → detailed error
+- **Content cleaning**: Removes JSON markdown blocks and extracts JSON
+- **Error context**: Better error messages for debugging
+- **Benefit**: Reduces LLM response parsing failures
+
+### **5. Critical Goto Command Bug Fix**
+**File Modified**: `GotoTarget.java:42-70`
+- **Fixed coordinate parsing bug** where all goto commands went to (0,0,0)
+- **Root cause**: Switch expression executed after constructor call
+- **Solution**: Traditional switch statement with proper execution order
+- **Impact**: `goto 100 64 200` now works correctly instead of going to origin
+- **Benefit**: AI can navigate to specified coordinates properly
+
+### **6. WorldStatus Information System Documentation**
+**Analysis Completed**: LLM prompt compilation system
+- **Identified**: `WorldStatus.fromMod()` → `StatusUtils` methods → LLM prompt
+- **Data sources**: Weather, hostiles, players, NPCs, time, difficulty
+- **Key insight**: Entity position was missing from AI awareness (now fixed)
+- **Scanning ranges**: 32 blocks (entities), 12 blocks (blocks)
+- **Benefit**: Understanding of how AI perceives world state
+
+### **Command Development Guidelines Added**
+**Section Enhanced**: Developer Index command guidelines
+- **Sequential argument parsing**: Use `parser.get(Class)` in order
+- **Optional arguments**: Proper default value handling
+- **Error handling**: Try-catch for missing arguments
+- **Task integration**: Standard `mod.runUserTask(task, this::finish)` pattern
+- **Import corrections**: Proper Minecraft mappings for this version
+
+### **BrainLoop Design Documentation** 
+**File Created**: `docs/BrainLoop_Design.md`
+- **Background monitoring system**: Tick-based condition evaluation
+- **Extensible architecture**: Easy addition of new monitoring conditions  
+- **Emergency responses**: Auto-reactions to health, drowning, night exposure
+- **Task integration**: Can trigger tasks when conditions are met
+- **Status**: Design documented, not yet implemented
+
+## 🚨 Known Issues Resolved
+
+1. **Goto Command Failure** ✅ - Fixed coordinate parsing execution order
+2. **Missing Entity Position** ✅ - Added self-position to agent status  
+3. **JSON Parsing Errors** ⚠️ - Partially addressed, needs completion
+4. **Limited Task Visibility** ✅ - Added comprehensive task logging
+5. **Missing Place Command** ✅ - Implemented full block placement system
+
+## 🎯 Impact Summary
+
+These modifications significantly enhance PlayerEngine's capability for:
+- **Spatial reasoning and navigation**
+- **Complex building and construction tasks** 
+- **Real-time debugging and monitoring**
+- **Robust LLM communication**
+- **Command extensibility**
+
+The changes transform PlayerEngine from a basic task executor into a more capable, observable, and spatially-aware AI system suitable for complex world interaction tasks.
+
+---
+
 *This index provides a comprehensive navigation guide for the PlayerEngine codebase. For specific implementation details, refer to the individual source files using the provided file paths and line numbers.*

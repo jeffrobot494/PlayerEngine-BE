@@ -42,26 +42,32 @@ public class GotoTarget {
       int x = 0;
       int y = 0;
       int z = 0;
+      GotoTarget.GotoTargetCoordType type;
 
-      return new GotoTarget(x, y, z, dimension, switch (numbers.size()) {
-         case 0 -> GotoTarget.GotoTargetCoordType.NONE;
-         case 1 -> {
+      switch (numbers.size()) {
+         case 0:
+            type = GotoTarget.GotoTargetCoordType.NONE;
+            break;
+         case 1:
             y = numbers.get(0);
-            yield GotoTarget.GotoTargetCoordType.Y;
-         }
-         case 2 -> {
+            type = GotoTarget.GotoTargetCoordType.Y;
+            break;
+         case 2:
             x = numbers.get(0);
             z = numbers.get(1);
-            yield GotoTarget.GotoTargetCoordType.XZ;
-         }
-         case 3 -> {
+            type = GotoTarget.GotoTargetCoordType.XZ;
+            break;
+         case 3:
             x = numbers.get(0);
             y = numbers.get(1);
             z = numbers.get(2);
-            yield GotoTarget.GotoTargetCoordType.XYZ;
-         }
-         default -> throw new CommandException("Unexpected number of integers passed to coordinate: " + numbers.size());
-      });
+            type = GotoTarget.GotoTargetCoordType.XYZ;
+            break;
+         default:
+            throw new CommandException("Unexpected number of integers passed to coordinate: " + numbers.size());
+      }
+
+      return new GotoTarget(x, y, z, dimension, type);
    }
 
    public int getX() {

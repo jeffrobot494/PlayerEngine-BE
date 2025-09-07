@@ -52,9 +52,9 @@ public abstract class SingleTaskChain extends TaskChain {
       if (this.mainTask == null || !this.mainTask.equals(task)) {
          if (this.mainTask != null) {
             this.mainTask.stop(task);
-            Debug.logMessage("Task Change [" + this.getName() + "]: " + this.mainTask + " → " + task);
+            Debug.logInternal("Task Change [" + this.getName() + "]: " + this.mainTask + " → " + task);
          } else if (task != null) {
-            Debug.logMessage("Task Start [" + this.getName() + "]: " + task);
+            Debug.logInternal("Task Start [" + this.getName() + "]: " + task);
          }
 
          this.mainTask = task;
