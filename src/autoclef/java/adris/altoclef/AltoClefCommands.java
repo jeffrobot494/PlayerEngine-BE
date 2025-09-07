@@ -19,6 +19,8 @@ import adris.altoclef.commands.MeatCommand;
 import adris.altoclef.commands.PlaceCommand;
 import adris.altoclef.commands.ReloadSettingsCommand;
 import adris.altoclef.commands.ResetMemoryCommand;
+import adris.altoclef.commands.RideCommand;
+import adris.altoclef.commands.DismountCommand;
 import adris.altoclef.commands.SetAIBridgeEnabledCommand;
 import adris.altoclef.commands.StopCommand;
 import adris.altoclef.commands.random.ScanCommand;
@@ -44,6 +46,8 @@ public class AltoClefCommands {
             new ResetMemoryCommand(),
             new GamerCommand(),
             new FollowCommand(),
+            new RideCommand(),
+            new DismountCommand(),
             new GiveCommand(),
             new ScanCommand(),
             new AttackPlayerOrMobCommand(),
