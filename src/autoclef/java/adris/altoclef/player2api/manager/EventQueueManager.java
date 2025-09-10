@@ -1,4 +1,21 @@
-package adris.altoclef.player2api;
+/*
+ * This file is part of Baritone.
+ *
+ * Baritone is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Baritone is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Baritone.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package adris.altoclef.player2api.manager;
 
 import java.util.Comparator;
 import java.util.List;
@@ -11,6 +28,12 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import adris.altoclef.player2api.AgentSideEffects;
+import adris.altoclef.player2api.Character;
+import adris.altoclef.player2api.ConversationHistory;
+import adris.altoclef.player2api.Event;
+import adris.altoclef.player2api.EventQueueData;
+import adris.altoclef.player2api.Player2APIService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -121,7 +144,7 @@ public class EventQueueManager {
     // ## Callbacks (need to register these externally)
 
     // register when a user sends a chat message
-    public static void onUserChatMessage(Event.UserMessage msg) {
+    public static void onUserChatMessage(UserMessage msg) {
         LOGGER.info("User message event={}", msg);
         // will add to entities close to the user:
         filterQueueData(d -> isCloseToPlayer(d, msg.userName())).forEach(data -> {

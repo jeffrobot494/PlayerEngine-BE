@@ -11,6 +11,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.entity.player.Player;
 
 public class CharacterUtils {
    public static Character DEFAULT_CHARACTER = new Character(
@@ -62,18 +63,18 @@ public class CharacterUtils {
       }
    }
 
-   public static Character[] requestCharacters(String player2GameId) {
+   public static Character[] requestCharacters(Player player, String player2GameId) {
       try {
-         Map<String, JsonElement> responseMap = HTTPUtils.sendRequest( "/v1/selected_characters", false, null, Player2APIService.getHeaders(player2GameId));
+         Map<String, JsonElement> responseMap = Player2HTTPUtils.sendRequest(player, player2GameId,"/v1/selected_characters", false, null);
          return parseCharacters(responseMap);
       } catch (Exception var2) {
          return new Character[0];
       }
    }
 
-   public static Character requestFirstCharacter(String player2GameId) {
+   public static Character requestFirstCharacter(Player player, String player2GameId) {
       try {
-         Map<String, JsonElement> responseMap = HTTPUtils.sendRequest( "/v1/selected_characters", false, null, Player2APIService.getHeaders(player2GameId));
+         Map<String, JsonElement> responseMap = Player2HTTPUtils.sendRequest(player, player2GameId, "/v1/selected_characters", false, null);
          return parseFirstCharacter(responseMap);
       } catch (Exception var2) {
          return DEFAULT_CHARACTER;

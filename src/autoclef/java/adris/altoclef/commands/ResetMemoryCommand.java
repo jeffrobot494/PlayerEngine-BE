@@ -3,7 +3,7 @@ package adris.altoclef.commands;
 import adris.altoclef.AltoClefController;
 import adris.altoclef.commandsystem.ArgParser;
 import adris.altoclef.commandsystem.Command;
-import adris.altoclef.player2api.EventQueueManager;
+import adris.altoclef.player2api.manager.EventQueueManager;
 
 public class ResetMemoryCommand extends Command {
    public ResetMemoryCommand() {

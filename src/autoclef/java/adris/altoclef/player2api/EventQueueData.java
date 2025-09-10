@@ -5,6 +5,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.Consumer;
 
+import adris.altoclef.player2api.manager.EventQueueManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

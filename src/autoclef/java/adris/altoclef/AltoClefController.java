@@ -15,7 +15,7 @@ import adris.altoclef.control.InputControls;
 import adris.altoclef.control.PlayerExtraController;
 import adris.altoclef.control.SlotHandler;
 
-import adris.altoclef.player2api.EventQueueManager;
+import adris.altoclef.player2api.manager.EventQueueManager;
 import adris.altoclef.player2api.AIPersistantData;
 import adris.altoclef.player2api.Player2APIService;
 
@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -130,7 +131,7 @@ public class AltoClefController {
       // AI setup: (should be at end to ensure as many things are not null as possible)
       EventQueueManager.getOrCreateEventQueueData(this);
       this.aiPersistantData = new AIPersistantData(this, character);
-      this.player2apiService = new Player2APIService(player2GameId);
+      this.player2apiService = new Player2APIService(this, player2GameId);
    }
 
    public void serverTick() {
@@ -142,7 +143,13 @@ public class AltoClefController {
       this.taskRunner.tick();
       this.inputControls.onTickPost();
       this.baritone.serverTick();
+      this.player2apiService.trySendHeartbeat();
    }
+
+   static {
+      ServerTickEvents.END_SERVER_TICK.register(AltoClefController::staticServerTick);
+   }
+
    public static void staticServerTick(MinecraftServer server) {
       EventQueueManager.injectOnTick(server);
    }
