@@ -172,7 +172,7 @@ public class Baritone implements IBaritone {
 
    @Override
    public void logDebug(String message) {
-      Automatone.LOGGER.debug(message);
+      PlayerEngine.LOGGER.debug(message);
    }
 
    @Override

@@ -1,6 +1,6 @@
 package baritone.pathing.movement;
 
-import baritone.Automatone;
+import baritone.PlayerEngine;
 import baritone.Baritone;
 import baritone.api.IBaritone;
 import baritone.api.entity.IInventoryProvider;
@@ -84,7 +84,7 @@ public class CalculationContext {
       this.hasThrowaway = baritone.settings().allowPlace.get() && ((Baritone)baritone).getInventoryBehavior().hasGenericThrowaway();
       this.hasWaterBucket = this.player != null
          && baritone.settings().allowWaterBucketFall.get()
-         && LivingEntityInventory.isValidHotbarIndex(InventoryBehavior.getSlotWithStack(this.player.getLivingInventory(), Automatone.WATER_BUCKETS))
+         && LivingEntityInventory.isValidHotbarIndex(InventoryBehavior.getSlotWithStack(this.player.getLivingInventory(), PlayerEngine.WATER_BUCKETS))
          && !this.world.dimensionType().ultraWarm();
       this.canSprint = this.player != null && baritone.settings().allowSprint.get();
       this.placeBlockCost = baritone.settings().blockPlacementPenalty.get();

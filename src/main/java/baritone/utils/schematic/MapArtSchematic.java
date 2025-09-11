@@ -1,6 +1,6 @@
 package baritone.utils.schematic;
 
-import baritone.Automatone;
+import baritone.PlayerEngine;
 import baritone.api.schematic.IStaticSchematic;
 import baritone.api.schematic.MaskSchematic;
 import java.util.OptionalInt;
@@ -31,8 +31,8 @@ public class MapArtSchematic extends MaskSchematic {
             if (lowestBlockY.isPresent()) {
                heightMap[x][z] = lowestBlockY.getAsInt();
             } else {
-               Automatone.LOGGER.warn("Column " + x + "," + z + " has no blocks, but it's apparently map art? wtf");
-               Automatone.LOGGER.warn("Letting it be whatever");
+               PlayerEngine.LOGGER.warn("Column " + x + "," + z + " has no blocks, but it's apparently map art? wtf");
+               PlayerEngine.LOGGER.warn("Letting it be whatever");
                heightMap[x][z] = 256;
             }
          }

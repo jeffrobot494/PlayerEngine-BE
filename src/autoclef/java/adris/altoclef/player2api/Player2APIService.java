@@ -18,6 +18,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.net.HttpURLConnection;
 
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import org.apache.logging.log4j.Logger;
@@ -85,23 +89,42 @@ public class Player2APIService {
 
    public void textToSpeech(String message, Character character, Consumer<Map<String, JsonElement>> onFinish) {
       try {
-         JsonObject requestBody = new JsonObject();
-         requestBody.addProperty("speed", 1);
-         requestBody.addProperty("text", message);
-         requestBody.addProperty("audio_format", "mp3");
-         JsonArray voiceIdsArray = new JsonArray();
+         FriendlyByteBuf buf = PacketByteBufs.create();
 
-         for (String voiceId : character.voiceIds()) {
-            voiceIdsArray.add(voiceId);
+         buf.writeUtf(clientId);
+         buf.writeUtf(Player2HTTPUtils.awaitToken( controller.getOwner(), clientId));
+         buf.writeUtf(message);
+         buf.writeDouble(1);
+         buf.writeVarInt(character.voiceIds().length);
+         for (String id : character.voiceIds()) {
+            buf.writeUtf(id);
          }
 
-         requestBody.add("voice_ids", voiceIdsArray);
-         LOGGER.info("TTS request w/ msg={}", message);
-         Map<String, JsonElement> responseMap = Player2HTTPUtils.sendRequest(controller.getOwner(), clientId,"/v1/tts/speak", true, requestBody);
-         onFinish.accept(responseMap);
+         ServerPlayNetworking.send((ServerPlayer) controller.getOwner(), new ResourceLocation("playerengine", "stream_tts"), buf);
+         onFinish.accept(null);
       } catch (Exception var9) {
       }
    }
+
+//   public void textToSpeech(String message, Character character, Consumer<Map<String, JsonElement>> onFinish) {
+//      try {
+//         JsonObject requestBody = new JsonObject();
+//         requestBody.addProperty("speed", 1);
+//         requestBody.addProperty("text", message);
+//         requestBody.addProperty("audio_format", "mp3");
+//         JsonArray voiceIdsArray = new JsonArray();
+//
+//         for (String voiceId : character.voiceIds()) {
+//            voiceIdsArray.add(voiceId);
+//         }
+//
+//         requestBody.add("voice_ids", voiceIdsArray);
+//         LOGGER.info("TTS request w/ msg={}", message);
+//         Map<String, JsonElement> responseMap = Player2HTTPUtils.sendRequest(controller.getOwner(), clientId,"/v1/tts/speak", true, requestBody);
+//         onFinish.accept(responseMap);
+//      } catch (Exception var9) {
+//      }
+//   }
 
    public void startSTT() {
       JsonObject requestBody = new JsonObject();

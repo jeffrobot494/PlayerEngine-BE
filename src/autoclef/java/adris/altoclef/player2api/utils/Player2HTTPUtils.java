@@ -57,7 +57,7 @@ public class Player2HTTPUtils {
         return headers;
     }
 
-    private static String awaitToken(Player player, String clientId) throws ExecutionException, InterruptedException {
+    public static String awaitToken(Player player, String clientId) throws ExecutionException, InterruptedException {
         return AuthenticationManager.getInstance().authenticate(player, clientId).get();
     }
 }

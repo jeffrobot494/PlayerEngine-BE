@@ -1,6 +1,6 @@
 package baritone.utils;
 
-import baritone.Automatone;
+import baritone.PlayerEngine;
 import baritone.api.Settings;
 import baritone.api.utils.SettingsUtil;
 import java.io.BufferedWriter;
@@ -20,7 +20,7 @@ public class SettingsLoader {
          Files.lines(SETTINGS_PATH).filter(line -> !line.trim().isEmpty() && !isComment(line)).forEach(line -> {
             Matcher matcher = SETTING_PATTERN.matcher(line);
             if (!matcher.matches()) {
-               Automatone.LOGGER.error("Invalid syntax in setting file: " + line);
+               PlayerEngine.LOGGER.error("Invalid syntax in setting file: " + line);
             } else {
                String settingName = matcher.group("setting").toLowerCase();
                String settingValue = matcher.group("value");
@@ -28,19 +28,19 @@ public class SettingsLoader {
                try {
                   SettingsUtil.parseAndApply(settings, settingName, settingValue);
                } catch (Exception var6) {
-                  Automatone.LOGGER.error("Unable to parse line " + line, var6);
+                  PlayerEngine.LOGGER.error("Unable to parse line " + line, var6);
                }
             }
          });
       } catch (NoSuchFileException var4) {
-         Automatone.LOGGER.info("Automatone settings file not found, resetting.");
+         PlayerEngine.LOGGER.info("Automatone settings file not found, resetting.");
 
          try {
             Files.createFile(SETTINGS_PATH);
          } catch (IOException var3) {
          }
       } catch (Exception var5) {
-         Automatone.LOGGER.error("Exception while reading Automatone settings, some settings may be reset to default values!", var5);
+         PlayerEngine.LOGGER.error("Exception while reading Automatone settings, some settings may be reset to default values!", var5);
       }
    }
 
@@ -54,7 +54,7 @@ public class SettingsLoader {
             out.write(SettingsUtil.settingToString(setting) + "\n");
          }
       } catch (Exception var6) {
-         Automatone.LOGGER.error("Exception thrown while saving Automatone settings!", var6);
+         PlayerEngine.LOGGER.error("Exception thrown while saving Automatone settings!", var6);
       }
    }
 }

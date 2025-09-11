@@ -1,6 +1,6 @@
 package baritone.command.defaults;
 
-import baritone.Automatone;
+import baritone.PlayerEngine;
 import baritone.api.BaritoneAPI;
 import baritone.api.IBaritone;
 import baritone.api.Settings;
@@ -116,7 +116,7 @@ public final class DefaultCommands {
          source.sendSuccess(() -> Component.literal("daniel"), false);
          return false;
       } else if (msg.trim().equalsIgnoreCase("orderpizza")) {
-         Automatone.LOGGER.fatal("No pizza :(");
+         PlayerEngine.LOGGER.fatal("No pizza :(");
          return false;
       } else if (msg.isEmpty()) {
          return runCommand(source, "help", baritone);

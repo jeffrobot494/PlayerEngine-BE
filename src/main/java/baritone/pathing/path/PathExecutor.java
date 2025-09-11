@@ -1,6 +1,6 @@
 package baritone.pathing.path;
 
-import baritone.Automatone;
+import baritone.PlayerEngine;
 import baritone.Baritone;
 import baritone.api.Settings;
 import baritone.api.pathing.calc.IPath;
@@ -93,7 +93,7 @@ public class PathExecutor implements IPathExecutor {
          Tuple<Double, BlockPos> status = this.closestPathPos(this.path);
          if (this.possiblyOffPath(status, 2.0)) {
             this.ticksAway++;
-            Automatone.LOGGER.warn("FAR AWAY FROM PATH FOR " + this.ticksAway + " TICKS. Current distance: " + status.getA() + ". Threshold: 2.0");
+            PlayerEngine.LOGGER.warn("FAR AWAY FROM PATH FOR " + this.ticksAway + " TICKS. Current distance: " + status.getA() + ". Threshold: 2.0");
             if (this.ticksAway > 200.0) {
                this.logDebug("Too far away from path for too long, cancelling path");
                this.cancel();

@@ -1,6 +1,6 @@
 package baritone.command.defaults;
 
-import baritone.Automatone;
+import baritone.PlayerEngine;
 import baritone.api.IBaritone;
 import baritone.api.command.Command;
 import baritone.api.command.argument.IArgConsumer;
@@ -14,7 +14,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.resources.ResourceLocation;
 
 public class ClickCommand extends Command {
-   public static final ResourceLocation OPEN_CLICK_SCREEN = Automatone.id("open_click_screen");
+   public static final ResourceLocation OPEN_CLICK_SCREEN = PlayerEngine.id("open_click_screen");
 
    public ClickCommand() {
       super("click");
@@ -27,7 +27,7 @@ public class ClickCommand extends Command {
       try {
          CommandSource t = ((ServerCommandSourceAccessor)source).automatone$getOutput();
       } catch (Throwable var6) {
-         Automatone.LOGGER.error("Failed to open click screen, is this a dedicated server?", var6);
+         PlayerEngine.LOGGER.error("Failed to open click screen, is this a dedicated server?", var6);
       }
 
       this.logDirect(source, "aight dude");
