@@ -6,7 +6,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.Consumer;
 
-import adris.altoclef.player2api.manager.EventQueueManager;
+import adris.altoclef.player2api.manager.ConversationManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -21,7 +21,7 @@ import adris.altoclef.player2api.status.WorldStatus;
 import adris.altoclef.player2api.utils.Utils;
 import net.minecraft.world.entity.LivingEntity;
 
-public class EventQueueData {
+public class AgentConversationData {
 
     private static short MAX_EVENT_QUEUE_SIZE = 10;
 
@@ -40,7 +40,7 @@ public class EventQueueData {
 
     private MessageBuffer altoClefMsgBuffer = new MessageBuffer(10);
 
-    public EventQueueData(AltoClefController mod) {
+    public AgentConversationData(AltoClefController mod) {
         this.mod = mod;
     }
 
@@ -60,7 +60,7 @@ public class EventQueueData {
     public void process(
             Consumer<Event.CharacterMessage> onCharacterEvent,
             Consumer<String> extOnErrMsg,
-            EventQueueManager.LLMCompleter completer) {
+            LLMCompleter completer) {
 
         if (isProcessing) {
             LOGGER.warn("Called queueData.process even though it was already processing! this should not happen");
@@ -116,7 +116,7 @@ public class EventQueueData {
                 this.isProcessing = false;
             }
         };
-        completer.process(mod.getPlayer2APIService(), historyWithWrappedStatus, onLLMResponse, onErrMsg);
+        completer.processToJson(mod.getPlayer2APIService(), historyWithWrappedStatus, onLLMResponse, onErrMsg);
     }
 
     private boolean isEventDuplicateOfLastMessage(Event evt) {
@@ -203,8 +203,7 @@ public class EventQueueData {
                     "Command feedback: %s FAILED. The error was %s.",
                     stopReason.commandName(),
                     ((CommandExecutionStopReason.Error) stopReason).errMsg())));
-        }
-        else{
+        } else {
             LOGGER.info("Skipping command stop for cmd={} because it was cancelled", stopReason.commandName());
         }
         // (if canceled dont modify queue)

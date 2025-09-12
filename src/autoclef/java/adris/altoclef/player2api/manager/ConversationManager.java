@@ -1,20 +1,3 @@
-/*
- * This file is part of Baritone.
- *
- * Baritone is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Baritone is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Baritone.  If not, see <https://www.gnu.org/licenses/>.
- */
-
 package adris.altoclef.player2api.manager;
 
 import java.util.Comparator;
@@ -22,22 +5,17 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import adris.altoclef.player2api.AgentSideEffects;
 import adris.altoclef.player2api.Character;
-import adris.altoclef.player2api.ConversationHistory;
 import adris.altoclef.player2api.Event;
-import adris.altoclef.player2api.EventQueueData;
-import adris.altoclef.player2api.Player2APIService;
+import adris.altoclef.player2api.LLMCompleter;
+import adris.altoclef.player2api.AgentConversationData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import com.google.gson.JsonObject;
 
 import adris.altoclef.AltoClefController;
 import adris.altoclef.player2api.Event.UserMessage;
@@ -46,10 +24,19 @@ import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
 import net.fabricmc.fabric.api.message.v1.ServerMessageEvents.ChatMessage;
 import net.minecraft.server.MinecraftServer;
 
-public class EventQueueManager {
+public class ConversationManager {
     public static final Logger LOGGER = LogManager.getLogger();
 
-    public static ConcurrentHashMap<UUID, EventQueueData> queueData = new ConcurrentHashMap<>();
+    public static class Lock {
+        public static boolean waitingForResponseLock = false; // prevents conversation processing before onLLMResponse
+                                                              // called
+
+        public static boolean isConversationLocked() {
+            return waitingForResponseLock || TTSManager.isLocked();
+        }
+    }
+
+    public static ConcurrentHashMap<UUID, AgentConversationData> queueData = new ConcurrentHashMap<>();
     private static float messagePassingMaxDistance = 64; // let messages between entities pass iff <= this maximum
     private static boolean hasInit = false;
 
@@ -61,83 +48,28 @@ public class EventQueueManager {
             ServerMessageEvents.CHAT_MESSAGE.register((ChatMessage) (evt, senderEntity, params) -> {
                 String message = evt.signedContent();
                 String sender = senderEntity.getName().getString();
-                EventQueueManager.onUserChatMessage(new UserMessage(message, sender));
+                ConversationManager.onUserChatMessage(new UserMessage(message, sender));
             });
-        }
-    }
-
-    public static class LLMCompleter {
-        private boolean isProcessing = false;
-
-        private static final ExecutorService llmThread = Executors.newSingleThreadExecutor();
-
-        public void process(
-                Player2APIService player2apiService,
-                ConversationHistory history,
-                Consumer<JsonObject> extOnLLMResponse,
-                Consumer<String> extOnErrMsg) {
-            if (isProcessing) {
-                LOGGER.warn("Called llmcompleter.process when it was already processing! This should not happen.");
-                return;
-            }
-            Consumer<JsonObject> onLLMResponse = resp -> {
-                try {
-                    extOnLLMResponse.accept(resp);
-                } catch (Exception e) {
-                    LOGGER.error(
-                            "[EventQueueManager/LLMCompleter/process/onLLMResponse]: Error in external llm resp, errMsg={} llmResp={}",
-                            e.getMessage(), resp.toString());
-                } finally {
-                    LOGGER.info("Done processing, isprocessing -> false");
-                    isProcessing = false;
-                }
-            };
-            Consumer<String> onErrMsg = errMsg -> {
-                try {
-                    extOnErrMsg.accept(errMsg);
-                } catch (Exception e) {
-                    LOGGER.error(
-                            "[EventQueueManager/LLMCompleter/process/onErrMsg]: Error in external onErrmsg, errMsgFromException={} errMsg={}",
-                            e.getMessage(), errMsg);
-                } finally {
-                    isProcessing = false;
-                }
-            };
-            isProcessing = true;
-            llmThread.submit(() -> {
-                try {
-                    JsonObject response = player2apiService.completeConversation(history);
-                    LOGGER.info("LLMCompleter returned json={}", response);
-                    onLLMResponse.accept(response);
-                } catch (Exception e) {
-                    onErrMsg.accept(
-                            e.getMessage() == null ? "Unknown error from CompleteConversation API" : e.getMessage());
-                }
-            });
-        }
-
-        public boolean isAvailible() {
-            return !isProcessing;
         }
     }
 
     private static List<LLMCompleter> llmCompleters = List.of(new LLMCompleter());
 
     // ## Utils
-    public static EventQueueData getOrCreateEventQueueData(AltoClefController mod) {
+    public static AgentConversationData getOrCreateEventQueueData(AltoClefController mod) {
         return queueData.computeIfAbsent(mod.getPlayer().getUUID(), k -> {
             LOGGER.info(
                     "EventQueueManager/getOrCreateEventQueueData: creating new queue data for entId={}",
                     mod.getPlayer().getStringUUID());
-            return new EventQueueData(mod);
+            return new AgentConversationData(mod);
         });
     }
 
-    private static Stream<EventQueueData> filterQueueData(Predicate<EventQueueData> pred) {
+    private static Stream<AgentConversationData> filterQueueData(Predicate<AgentConversationData> pred) {
         return queueData.values().stream().filter(pred);
     }
 
-    private static Stream<EventQueueData> getCloseDataByUUID(UUID sender) {
+    private static Stream<AgentConversationData> getCloseDataByUUID(UUID sender) {
         return filterQueueData(data -> data.getDistance(sender) < messagePassingMaxDistance);
     }
 
@@ -164,9 +96,9 @@ public class EventQueueManager {
     }
 
     private static void process(Consumer<Event.CharacterMessage> onCharacterEvent, Consumer<String> onErrEvent) {
-        Optional<EventQueueData> dataToProcess = queueData.values().stream().filter(data -> {
+        Optional<AgentConversationData> dataToProcess = queueData.values().stream().filter(data -> {
             return data.getPriority() != 0;
-        }).max(Comparator.comparingLong(EventQueueData::getPriority));
+        }).max(Comparator.comparingLong(AgentConversationData::getPriority));
         llmCompleters.stream().filter(LLMCompleter::isAvailible).forEach(completer -> {
             dataToProcess.ifPresent(data -> {
                 data.process(onCharacterEvent, onErrEvent, completer);
@@ -186,15 +118,17 @@ public class EventQueueManager {
         Consumer<String> onErrEvent = (errMsg) -> {
             AgentSideEffects.onError(server, errMsg);
         };
-        if (!TTSManager.isLocked()) {
+
+        if (!Lock.isConversationLocked()) {
             process(onCharacterEvent, onErrEvent);
         }
+
         TTSManager.injectOnTick(server);
     }
 
     public static void sendGreeting(AltoClefController mod, Character character) {
         LOGGER.info("Sending greeting character={}", character);
-        EventQueueData data = getOrCreateEventQueueData(mod);
+        AgentConversationData data = getOrCreateEventQueueData(mod);
         data.onGreeting();
     }
 
@@ -202,7 +136,7 @@ public class EventQueueManager {
         mod.getAIPersistantData().clearHistory();
     }
 
-    private static boolean isCloseToPlayer(EventQueueData data, String userName) {
+    private static boolean isCloseToPlayer(AgentConversationData data, String userName) {
         return StatusUtils.getDistanceToUsername(data.getMod(), userName) < messagePassingMaxDistance;
     }
 }

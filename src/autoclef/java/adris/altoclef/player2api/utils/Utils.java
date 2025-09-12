@@ -46,7 +46,8 @@ public class Utils {
       if (input.has(fieldName) && !input.get(fieldName).isJsonNull()) {
          JsonElement element = input.get(fieldName);
          if (!element.isJsonArray()) {
-            System.err.println("Warning: Expected a JSON array for field '" + fieldName + "', but found a different type.");
+            System.err
+                  .println("Warning: Expected a JSON array for field '" + fieldName + "', but found a different type.");
             return null;
          } else {
             JsonArray jsonArray = element.getAsJsonArray();
@@ -70,5 +71,10 @@ public class Utils {
    public static JsonObject deepCopy(JsonObject original) {
       JsonParser parser = new JsonParser();
       return parser.parse(original.toString()).getAsJsonObject();
+   }
+
+   @FunctionalInterface
+   public interface ThrowingFunction<T, R> {
+      R apply(T t) throws Exception;
    }
 }
