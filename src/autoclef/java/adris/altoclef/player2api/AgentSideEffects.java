@@ -77,11 +77,17 @@ public class AgentSideEffects {
             mod.runUserTask(new LookAtOwnerTask());
             return;
         }
-        cmdExecutor.execute(commandWithPrefix, () -> {
+
+        // add quotes to build_structure so it gets proccessed as one arg:
+        String processedCommandWithPrefix = commandWithPrefix.replaceFirst(
+                "^(@build_structure)\\s+(?![\"'])(.+)$",
+                "$1 \"$2\"");
+
+        cmdExecutor.execute(processedCommandWithPrefix, () -> {
             if (mod.isStopping) {
                 LOGGER.info(
                         "[AgentSideEffects/AgentSideEffects]: (%s) was cancelled. Not adding finish event to queue.",
-                        commandWithPrefix);
+                        processedCommandWithPrefix);
                 // Other canceled logic here
                 onStop.accept(new CommandExecutionStopReason.Cancelled(commandWithPrefix));
                 LOGGER.info("after cancel, not running look at owner");

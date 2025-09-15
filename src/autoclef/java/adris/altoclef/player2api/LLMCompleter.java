@@ -24,7 +24,7 @@ public class LLMCompleter {
             Consumer<T> extOnLLMResponse,
             Consumer<String> extOnErrMsg,
             ThrowingFunction<ConversationHistory, T> completeConversation) {
-
+        LOGGER.info("Called completer.process with history={}", history);
         if (isProcessing) {
             LOGGER.warn("Called llmcompleter.process when it was already processing! This should not happen.");
             return;
@@ -40,7 +40,7 @@ public class LLMCompleter {
                 extOnLLMResponse.accept(resp);
             } catch (Exception e) {
                 LOGGER.error(
-                        "[EventQueueManager/LLMCompleter/process/onLLMResponse]: Error in external llm resp, errMsg={} llmResp={}",
+                        "[LLMCompleter/process/onLLMResponse]: Error in external llm resp, errMsg={} llmResp={}",
                         e.getMessage(), resp.toString());
             } finally {
                 LOGGER.info(
@@ -56,7 +56,7 @@ public class LLMCompleter {
                 extOnErrMsg.accept(errMsg);
             } catch (Exception e) {
                 LOGGER.error(
-                        "[EventQueueManager/LLMCompleter/process/onErrMsg]: Error in external onErrmsg, errMsgFromException={} errMsg={}",
+                        "[LLMCompleter/process/onErrMsg]: Error in external onErrmsg, errMsgFromException={} errMsg={}",
                         e.getMessage(), errMsg);
             } finally {
                 LOGGER.info(

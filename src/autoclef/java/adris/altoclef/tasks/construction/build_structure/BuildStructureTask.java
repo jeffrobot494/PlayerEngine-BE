@@ -91,7 +91,11 @@ public class BuildStructureTask extends Task {
                 // redstone/etc updating/torches falling probably
                 mod.getWorld().setBlock(new BlockPos(setBlockData.x, setBlockData.y, setBlockData.z),
                         block.defaultBlockState(), 3);
-            }, null, null, mod);
+            }, (errStr) -> {
+                result = Optional.of(Optional.of(errStr));
+            }, () -> {
+                result = Optional.of(Optional.empty());
+            }, mod);
         }
 
         @Override
@@ -134,6 +138,9 @@ public class BuildStructureTask extends Task {
         this.service = mod.getPlayer2APIService();
         this.numErrors = 0;
         this.history = new ConversationHistory(Prompts.getBuildStructurePrompt());
+        history.addUserMessage(
+                String.format("Build with the following description: (%s)", description),
+                service);
         this.completer = new LLMCompleter();
     }
 
@@ -156,17 +163,21 @@ public class BuildStructureTask extends Task {
         // ---------- now task is finished, switch to next task: -------
 
         if (actuallyRunningTask instanceof RequestLLMCode) {
+            LOGGER.info("Requesting llm code for description={}", description);
             Either<String, String> result = ((RequestLLMCode) actuallyRunningTask).llmResult.get();
             // set actually running task to next task:
             result.mapBoth(
                     code -> {
+                        LOGGER.info("LLM returned code={}", code);
                         actuallyRunningTask = new BuildFromCode(code);
                         return null;
                     }, errStr -> {
                         ++numErrors;
-                        history.addUserMessage(String.format(
+                        String tryAgainMessage = String.format(
                                 "When trying to call the llm with the description, got this error: \n(%s)\n. Try again and generate code using the same description:\n(%s)",
-                                errStr, description), service);
+                                errStr, description);
+                        history.addUserMessage(tryAgainMessage, service);
+                        LOGGER.info(tryAgainMessage);
                         actuallyRunningTask = new RequestLLMCode();
                         return null;
                     });
@@ -179,9 +190,11 @@ public class BuildStructureTask extends Task {
                     errStr -> {
                         String code = ((BuildFromCode) actuallyRunningTask).code;
                         history.addAssistantMessage(code, service);
-                        history.addUserMessage(String.format(
+                        String tryAgainMessage = String.format(
                                 "The code was executed, but got error \n(%s)\nTry again and generate code with the same description:\n(%s)",
-                                errStr, description), service);
+                                errStr, description);
+                        LOGGER.info(tryAgainMessage);
+                        history.addUserMessage(tryAgainMessage, service);
                         actuallyRunningTask = new RequestLLMCode();
                     }, () -> {
                         isDone = true;

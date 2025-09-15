@@ -103,7 +103,7 @@ public class StructureFromCode {
 
     enum TokenType {
         // Single-char
-        LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE, COMMA, DOT, MINUS, PLUS, SEMICOLON, SLASH, STAR,
+        LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE, COMMA, DOT, MINUS, PLUS, PERCENT, SEMICOLON, SLASH, STAR,
         // One or two char
         BANG, BANG_EQUAL, EQUAL, EQUAL_EQUAL, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL,
 
@@ -188,6 +188,9 @@ public class StructureFromCode {
                     break;
                 case '*':
                     add(TokenType.STAR);
+                    break;
+                case '%':
+                    add(TokenType.PERCENT);
                     break;
                 case '!':
                     add(match('=') ? TokenType.BANG_EQUAL : TokenType.BANG);
@@ -869,7 +872,7 @@ public class StructureFromCode {
 
         private Expr factor() {
             Expr expr = unary();
-            while (match(TokenType.STAR, TokenType.SLASH)) {
+            while (match(TokenType.STAR, TokenType.SLASH, TokenType.PERCENT)) {
                 Token op = previous();
                 Expr right = unary();
                 expr = new Binary(expr, op, right);
@@ -1103,6 +1106,10 @@ public class StructureFromCode {
                     checkNumber(l, e.op);
                     checkNumber(r, e.op);
                     return (Double) l / (Double) r;
+                case PERCENT:
+                    checkNumber(l, e.op);
+                    checkNumber(r, e.op);
+                    return (double) l % (double) r;
                 case GREATER:
                     checkNumber(l, e.op);
                     checkNumber(r, e.op);
@@ -1343,8 +1350,10 @@ public class StructureFromCode {
             StructureFromCode.runCode(code, onSetBlock, mod);
             onFinishSuccess.run();
         } catch (Exception e) {
-            LOGGER.error("LLM build structure err={} ", e.getMessage());
-            onErrString.accept(e.getMessage());
+            String err = e.getMessage();
+            String error = err == null ? "unknown error" : err;
+            LOGGER.error("LLM build structure err={} ", error);
+            onErrString.accept(error);
         }
     }
 
