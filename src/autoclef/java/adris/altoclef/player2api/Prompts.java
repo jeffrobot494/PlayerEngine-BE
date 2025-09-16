@@ -87,7 +87,7 @@ public class Prompts {
                               Side effects:
                               setBlock(x, y, z, blockName); — place a single block.
                               Comments: // comment
-                              Forbidden: user-defined functions, imports, while/foreach, floats, external calls.
+                              Forbidden: user-defined functions, imports, while/foreach, floats, external calls (THIS INCLUDES Math.sin, etc. DO NOT USE Math.sin, or any other external inputs).
                               Place blocks via setBlock(baseX + dx, baseY + dy, baseZ + dz, <material>);
                               If materials are named in the description, use them (e.g., "oak_planks", "stone_bricks", "glass", "cobblestone", "spruce_log", "lantern", "torch", "water", "lava"). If unknown, fall back to "stone".
                               ## Structure Guidelines

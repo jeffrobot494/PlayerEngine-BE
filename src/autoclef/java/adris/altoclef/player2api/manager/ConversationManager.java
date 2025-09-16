@@ -37,7 +37,7 @@ public class ConversationManager {
     }
 
     public static ConcurrentHashMap<UUID, AgentConversationData> queueData = new ConcurrentHashMap<>();
-    private static float messagePassingMaxDistance = 64; // let messages between entities pass iff <= this maximum
+    public static final float messagePassingMaxDistance = 64; // let messages between entities pass iff <= this maximum
     private static boolean hasInit = false;
 
     public static void init() {

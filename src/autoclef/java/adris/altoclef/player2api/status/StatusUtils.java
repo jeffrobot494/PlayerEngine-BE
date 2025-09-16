@@ -1,6 +1,7 @@
 package adris.altoclef.player2api.status;
 
 import adris.altoclef.AltoClefController;
+import adris.altoclef.player2api.manager.ConversationManager;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.helpers.ItemHelper;
 import baritone.api.entity.IAutomatone;
@@ -155,7 +156,8 @@ public class StatusUtils {
       List<String> descriptions = new ArrayList<>();
 
       for (Entity entity : mod.getEntityTracker().getCloseEntities()) {
-         if (entity instanceof Player player && entity.distanceTo(mod.getPlayer()) < 32.0F) {
+         if (entity instanceof Player player
+               && entity.distanceTo(mod.getPlayer()) < ConversationManager.messagePassingMaxDistance) {
             String username = player.getName().getString();
             String position = entity.position().align(EnumSet.allOf(Axis.class)).toString();
             descriptions.add(username + " at " + position);
@@ -163,7 +165,7 @@ public class StatusUtils {
       }
 
       return descriptions.isEmpty()
-            ? String.format("no nearby users within %d", 32)
+            ? String.format("no nearby users within %.2f", ConversationManager.messagePassingMaxDistance)
             : "[" + String.join(",", descriptions.stream().map(s -> "\"" + s + "\"").toArray(String[]::new)) + "]";
    }
 
@@ -209,6 +211,10 @@ public class StatusUtils {
 
    public static String getGamemodeString(AltoClefController mod) {
       return mod.getInteractionManager().getGameType().isCreative() ? "creative" : "survival";
+   }
+
+   public static String getCurrentPosition(AltoClefController mod) {
+      return mod.getEntity().getEyePosition().toString();
    }
 
    public static String getTaskTree(AltoClefController mod) {
