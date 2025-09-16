@@ -1,6 +1,8 @@
 package adris.altoclef.tasks.construction.build_structure;
 
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -49,7 +51,7 @@ public class BuildStructureTask extends Task {
             }, errStr -> {
                 LOGGER.info("LLM Transport Error={}", errStr);
                 llmResult = Optional.of(Either.right(errStr));
-            });
+            }, false);
         }
 
         @Override
@@ -76,26 +78,30 @@ public class BuildStructureTask extends Task {
     private class BuildFromCode extends Task {
         String code;
 
+        private ExecutorService buildThread;
         // outer Option: is done, inner option: is error
         Optional<Optional<String>> result = Optional.empty();
 
         public BuildFromCode(String code) {
             this.code = code;
-            StructureFromCode.buildStructureFromCode(code, setBlockData -> {
-                LOGGER.info("setBlock(x={}, y={}, z={}, blockName={})",
-                        setBlockData.x, setBlockData.y, setBlockData.z, setBlockData.blockName);
-                ResourceLocation id = new ResourceLocation("minecraft", setBlockData.blockName);
-                Block block = BuiltInRegistries.BLOCK.get(id);
-                // 3 means send to clients (2) and notify neighbors/update block states (1).
-                // maybe do 2 if you dont want
-                // redstone/etc updating/torches falling probably
-                mod.getWorld().setBlock(new BlockPos(setBlockData.x, setBlockData.y, setBlockData.z),
-                        block.defaultBlockState(), 3);
-            }, (errStr) -> {
-                result = Optional.of(Optional.of(errStr));
-            }, () -> {
-                result = Optional.of(Optional.empty());
-            }, mod);
+            this.buildThread = Executors.newSingleThreadExecutor();
+            buildThread.submit(() -> {
+                StructureFromCode.buildStructureFromCode(code, setBlockData -> {
+                    LOGGER.info("setBlock(x={}, y={}, z={}, blockName={})",
+                            setBlockData.x, setBlockData.y, setBlockData.z, setBlockData.blockName);
+                    ResourceLocation id = new ResourceLocation("minecraft", setBlockData.blockName);
+                    Block block = BuiltInRegistries.BLOCK.get(id);
+                    // 3 means send to clients (2) and notify neighbors/update block states (1).
+                    // maybe do 2 if you dont want
+                    // redstone/etc updating/torches falling probably
+                    mod.getWorld().setBlock(new BlockPos(setBlockData.x, setBlockData.y, setBlockData.z),
+                            block.defaultBlockState(), 3);
+                }, (errStr) -> {
+                    result = Optional.of(Optional.of(errStr));
+                }, () -> {
+                    result = Optional.of(Optional.empty());
+                }, mod);
+            });
         }
 
         @Override
@@ -107,6 +113,7 @@ public class BuildStructureTask extends Task {
         @Override
         protected void onStart() {
             // TODO Auto-generated method stub
+
         }
 
         @Override

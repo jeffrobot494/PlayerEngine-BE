@@ -48,8 +48,11 @@ public class Player2APIService {
       for (JsonObject msg : conversationHistory.getListJSON()) {
          messagesArray.add(msg);
       }
+      String lastMessageForDebug = conversationHistory.getListJSON().get(conversationHistory.getListJSON().size() - 1)
+            .toString();
 
       requestBody.add("messages", messagesArray);
+      LOGGER.info("Called complete conversation (string) HTTP request, last msg={}", lastMessageForDebug);
       Map<String, JsonElement> responseMap = Player2HTTPUtils.sendRequest(controller.getOwner(), clientId,
             "/v1/chat/completions", true, requestBody);
       if (responseMap.containsKey("choices")) {
@@ -58,6 +61,7 @@ public class Player2APIService {
             JsonObject messageObject = choices.get(0).getAsJsonObject().getAsJsonObject("message");
             if (messageObject != null && messageObject.has("content")) {
                String content = messageObject.get("content").getAsString();
+               LOGGER.info("Finished complete conversation HTTP request last msg={}", lastMessageForDebug);
                return Utils.parseCleanedJson(content);
             }
          }
@@ -75,6 +79,9 @@ public class Player2APIService {
       }
 
       requestBody.add("messages", messagesArray);
+      String lastMessageForDebug = conversationHistory.getListJSON().get(conversationHistory.getListJSON().size() - 1)
+            .toString();
+      LOGGER.info("Called complete conversation (string) HTTP request, last msg={}", lastMessageForDebug);
       Map<String, JsonElement> responseMap = Player2HTTPUtils.sendRequest(controller.getOwner(), clientId,
             "/v1/chat/completions", true, requestBody);
       if (responseMap.containsKey("choices")) {
@@ -82,6 +89,7 @@ public class Player2APIService {
          if (choices.size() != 0) {
             JsonObject messageObject = choices.get(0).getAsJsonObject().getAsJsonObject("message");
             if (messageObject != null && messageObject.has("content")) {
+               LOGGER.info("Finished complete conversation HTTP request last msg={}", lastMessageForDebug);
                return messageObject.get("content").getAsString();
             }
          }

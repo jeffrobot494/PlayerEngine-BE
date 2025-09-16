@@ -116,7 +116,7 @@ public class AgentConversationData {
                 this.isProcessing = false;
             }
         };
-        completer.processToJson(mod.getPlayer2APIService(), historyWithWrappedStatus, onLLMResponse, onErrMsg);
+        completer.processToJson(mod.getPlayer2APIService(), historyWithWrappedStatus, onLLMResponse, onErrMsg, true);
     }
 
     private boolean isEventDuplicateOfLastMessage(Event evt) {

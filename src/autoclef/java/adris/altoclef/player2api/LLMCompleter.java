@@ -15,7 +15,7 @@ import adris.altoclef.player2api.utils.Utils.ThrowingFunction;
 public class LLMCompleter {
     private boolean isProcessing = false; // probably don't need this anymore but can keep to be safe
 
-    private static final ExecutorService llmThread = Executors.newSingleThreadExecutor();
+    private final ExecutorService llmThread = Executors.newSingleThreadExecutor();
     private static final Logger LOGGER = LogManager.getLogger();
 
     private <T> void process(
@@ -23,7 +23,8 @@ public class LLMCompleter {
             ConversationHistory history,
             Consumer<T> extOnLLMResponse,
             Consumer<String> extOnErrMsg,
-            ThrowingFunction<ConversationHistory, T> completeConversation) {
+            ThrowingFunction<ConversationHistory, T> completeConversation,
+            boolean isConversation) {
         LOGGER.info("Called completer.process with history={}", history);
         if (isProcessing) {
             LOGGER.warn("Called llmcompleter.process when it was already processing! This should not happen.");
@@ -31,8 +32,10 @@ public class LLMCompleter {
         }
 
         // set locks:
-
-        ConversationManager.Lock.waitingForResponseLock = true;
+        if (isConversation) {
+            LOGGER.info("Setting conversation lock -> true");
+            ConversationManager.Lock.waitingForResponseLock = true;
+        }
         isProcessing = true;
 
         Consumer<T> onLLMResponse = resp -> {
@@ -47,7 +50,10 @@ public class LLMCompleter {
                         "Done processing, releasing conversation lock and setting this.completer.isprocessing -> false");
 
                 isProcessing = false;
-                ConversationManager.Lock.waitingForResponseLock = false;
+                if (isConversation) {
+                    LOGGER.info("Setting conversation lock -> false");
+                    ConversationManager.Lock.waitingForResponseLock = false;
+                }
             }
         };
 
@@ -62,7 +68,10 @@ public class LLMCompleter {
                 LOGGER.info(
                         "Done processing, releasing conversation lock and setting this.completer.isprocessing -> false");
                 isProcessing = false;
-                ConversationManager.Lock.waitingForResponseLock = false;
+                if (isConversation) {
+                    LOGGER.info("Setting conversation lock -> false");
+                    ConversationManager.Lock.waitingForResponseLock = false;
+                }
             }
         };
 
@@ -82,18 +91,20 @@ public class LLMCompleter {
             Player2APIService player2apiService,
             ConversationHistory history,
             Consumer<JsonObject> extOnLLMResponse,
-            Consumer<String> extOnErrMsg) {
+            Consumer<String> extOnErrMsg,
+            boolean isConversation) {
         process(player2apiService, history, extOnLLMResponse, extOnErrMsg,
-                player2apiService::completeConversation);
+                player2apiService::completeConversation, isConversation);
     }
 
     public void processToString(
             Player2APIService player2apiService,
             ConversationHistory history,
             Consumer<String> extOnLLMResponse,
-            Consumer<String> extOnErrMsg) {
+            Consumer<String> extOnErrMsg,
+            boolean isConversation) {
         process(player2apiService, history, extOnLLMResponse, extOnErrMsg,
-                player2apiService::completeConversationToString);
+                player2apiService::completeConversationToString, isConversation);
     }
 
     public boolean isAvailible() {
