@@ -24,6 +24,7 @@ import adris.altoclef.commands.DismountCommand;
 import adris.altoclef.commands.SetAIBridgeEnabledCommand;
 import adris.altoclef.commands.StopCommand;
 import adris.altoclef.commands.random.ScanCommand;
+import adris.altoclef.commands.BuildStructureCommand;
 import adris.altoclef.commandsystem.CommandException;
 
 public class AltoClefCommands {
@@ -33,6 +34,7 @@ public class AltoClefCommands {
             new GetCommand(),
             new EquipCommand(),
             new BodyLanguageCommand(),
+                 new BuildStructureCommand(),
             new DepositCommand(),
             new GotoCommand(),
             new IdleCommand(),
@@ -53,7 +55,6 @@ public class AltoClefCommands {
             new AttackPlayerOrMobCommand(),
             new SetAIBridgeEnabledCommand(),
             new FarmCommand(),
-            new FishCommand()
-         );
+            new FishCommand());
    }
 }

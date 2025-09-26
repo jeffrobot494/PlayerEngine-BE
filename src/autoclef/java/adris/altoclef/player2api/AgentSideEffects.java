@@ -1,7 +1,10 @@
 
 package adris.altoclef.player2api;
+
 import java.util.function.Consumer;
 
+import adris.altoclef.player2api.manager.ConversationManager;
+import adris.altoclef.player2api.manager.TTSManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -14,7 +17,6 @@ import net.minecraft.server.level.ServerPlayer;
 
 public class AgentSideEffects {
     private static final Logger LOGGER = LogManager.getLogger();
-
 
     public sealed interface CommandExecutionStopReason
             permits CommandExecutionStopReason.Cancelled,
@@ -35,16 +37,19 @@ public class AgentSideEffects {
     public static void onEntityMessage(MinecraftServer server, Event.CharacterMessage characterMessage) {
         // message part:
         if (characterMessage.message() != null && !characterMessage.message().isBlank()) {
-            EventQueueData sendingCharacterData = characterMessage.sendingCharacterData();
-                        String message = String.format("<%s> %s", sendingCharacterData.getName(), characterMessage.message());
-            for(ServerPlayer player : server.getPlayerList().getPlayers()){
+            AgentConversationData sendingCharacterData = characterMessage.sendingCharacterData();
+            String message = String.format("<%s> %s", sendingCharacterData.getName(), characterMessage.message());
+            for (ServerPlayer player : server.getPlayerList().getPlayers()) {
                 // if you are an owner, or close, send to player.
-                // if(sendingCharacterData.isOwner(player.getUUID()) || isClose(sendingCharacterData, player)  ){
-                    broadcastChatToPlayer(server, message, player);
+                // if(sendingCharacterData.isOwner(player.getUUID()) ||
+                // isClose(sendingCharacterData, player) ){
+                broadcastChatToPlayer(server, message, player);
                 // }
             }
-            TTSManager.TTS(characterMessage.message(), sendingCharacterData.getCharacter(), sendingCharacterData.getPlayer2apiService());
-            EventQueueManager.onAICharacterMessage(characterMessage, characterMessage.sendingCharacterData().getUUID());
+            TTSManager.TTS(characterMessage.message(), sendingCharacterData.getCharacter(),
+                    sendingCharacterData.getPlayer2apiService());
+            ConversationManager.onAICharacterMessage(characterMessage,
+                    characterMessage.sendingCharacterData().getUUID());
         }
 
         // command part:
@@ -68,24 +73,29 @@ public class AgentSideEffects {
         } else {
             mod.isStopping = false;
         }
-        if(commandWithPrefix.contains("idle")){
+        if (commandWithPrefix.contains("idle")) {
             mod.runUserTask(new LookAtOwnerTask());
             return;
         }
-        cmdExecutor.execute(commandWithPrefix, () -> {
+
+        // add quotes to build_structure so it gets proccessed as one arg:
+        String processedCommandWithPrefix = commandWithPrefix.replaceFirst(
+                "^(@build_structure)\\s+(?![\"'])(.+)$",
+                "$1 \"$2\"");
+
+        cmdExecutor.execute(processedCommandWithPrefix, () -> {
             if (mod.isStopping) {
                 LOGGER.info(
                         "[AgentSideEffects/AgentSideEffects]: (%s) was cancelled. Not adding finish event to queue.",
-                        commandWithPrefix);
+                        processedCommandWithPrefix);
                 // Other canceled logic here
                 onStop.accept(new CommandExecutionStopReason.Cancelled(commandWithPrefix));
                 LOGGER.info("after cancel, not running look at owner");
             } else {
-                if(!commandWithPrefix.equals("@bodylang greeting")){
+                if (!commandWithPrefix.equals("@bodylang greeting")) {
                     LOGGER.info("Running on stop after finish cmd={}", commandWithPrefix);
                     onStop.accept(new CommandExecutionStopReason.Finished(commandWithPrefix));
-                }
-                else{
+                } else {
                     LOGGER.info("Ignore onStop for bodylang greeting");
                 }
                 LOGGER.info("Running look at owner task after finish cmd={}", commandWithPrefix);
@@ -98,7 +108,7 @@ public class AgentSideEffects {
         });
     }
 
-    private static void broadcastChatToPlayer(MinecraftServer server, String message, ServerPlayer player){
+    private static void broadcastChatToPlayer(MinecraftServer server, String message, ServerPlayer player) {
         player.displayClientMessage(Component.literal(message), false);
     }
 

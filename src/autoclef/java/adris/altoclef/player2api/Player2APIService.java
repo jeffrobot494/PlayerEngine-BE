@@ -1,29 +1,46 @@
 package adris.altoclef.player2api;
 
+import adris.altoclef.AltoClefController;
+import adris.altoclef.player2api.auth.AuthKey;
+import adris.altoclef.player2api.auth.AuthenticationManager;
+import adris.altoclef.player2api.manager.HeartbeatManager;
 import adris.altoclef.player2api.utils.CharacterUtils;
 import adris.altoclef.player2api.utils.HTTPUtils;
+import adris.altoclef.player2api.utils.HttpApiException;
+import adris.altoclef.player2api.utils.Player2HTTPUtils;
 import adris.altoclef.player2api.utils.Utils;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.net.HttpURLConnection;
+
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import java.util.HashMap;
+
 public class Player2APIService {
    private static final Logger LOGGER = LogManager.getLogger();
 
-   private String player2GameID;
+   private String clientId;
+   private AltoClefController controller;
 
-   public Player2APIService(String player2GameID){
-      this.player2GameID = player2GameID;
+   private static MinecraftServer server;
+
+   public Player2APIService(AltoClefController controller, String clientId) {
+      this.clientId = clientId;
+      this.controller = controller;
    }
-   private Map<String, JsonElement> sendRequest(String endpoint, boolean postRequest, JsonObject requestBody) throws Exception{
-      Map<String, String> headers = getHeaders(player2GameID);
-      return HTTPUtils.sendRequest(endpoint, postRequest, requestBody, headers);
-   }
+
    public JsonObject completeConversation(ConversationHistory conversationHistory) throws Exception {
       JsonObject requestBody = new JsonObject();
       JsonArray messagesArray = new JsonArray();
@@ -31,15 +48,20 @@ public class Player2APIService {
       for (JsonObject msg : conversationHistory.getListJSON()) {
          messagesArray.add(msg);
       }
+      String lastMessageForDebug = conversationHistory.getListJSON().get(conversationHistory.getListJSON().size() - 1)
+            .toString();
 
       requestBody.add("messages", messagesArray);
-      Map<String, JsonElement> responseMap = sendRequest("/v1/chat/completions", true, requestBody);
+      LOGGER.info("Called complete conversation (string) HTTP request, last msg={}", lastMessageForDebug);
+      Map<String, JsonElement> responseMap = Player2HTTPUtils.sendRequest(controller.getOwner(), clientId,
+            "/v1/chat/completions", true, requestBody);
       if (responseMap.containsKey("choices")) {
          JsonArray choices = responseMap.get("choices").getAsJsonArray();
          if (choices.size() != 0) {
             JsonObject messageObject = choices.get(0).getAsJsonObject().getAsJsonObject("message");
             if (messageObject != null && messageObject.has("content")) {
                String content = messageObject.get("content").getAsString();
+               LOGGER.info("Finished complete conversation HTTP request last msg={}", lastMessageForDebug);
                return Utils.parseCleanedJson(content);
             }
          }
@@ -57,12 +79,17 @@ public class Player2APIService {
       }
 
       requestBody.add("messages", messagesArray);
-      Map<String, JsonElement> responseMap = sendRequest("/v1/chat/completions", true, requestBody);
+      String lastMessageForDebug = conversationHistory.getListJSON().get(conversationHistory.getListJSON().size() - 1)
+            .toString();
+      LOGGER.info("Called complete conversation (string) HTTP request, last msg={}", lastMessageForDebug);
+      Map<String, JsonElement> responseMap = Player2HTTPUtils.sendRequest(controller.getOwner(), clientId,
+            "/v1/chat/completions", true, requestBody);
       if (responseMap.containsKey("choices")) {
          JsonArray choices = responseMap.get("choices").getAsJsonArray();
          if (choices.size() != 0) {
             JsonObject messageObject = choices.get(0).getAsJsonObject().getAsJsonObject("message");
             if (messageObject != null && messageObject.has("content")) {
+               LOGGER.info("Finished complete conversation HTTP request last msg={}", lastMessageForDebug);
                return messageObject.get("content").getAsString();
             }
          }
@@ -71,44 +98,55 @@ public class Player2APIService {
       throw new Exception("Invalid response format: " + responseMap.toString());
    }
 
-   public Character getSelectedCharacter() {
-      try {
-         Map<String, JsonElement> responseMap = sendRequest(
-               "/v1/selected_characters", false, null);
-         //return CharacterUtils.parseFirstCharacter(responseMap);
-         return CharacterUtils.DEFAULT_CHARACTER;
-      } catch (Exception var2) {
-         return CharacterUtils.DEFAULT_CHARACTER;
-      }
-   }
-
    public void textToSpeech(String message, Character character, Consumer<Map<String, JsonElement>> onFinish) {
       try {
-         JsonObject requestBody = new JsonObject();
-         requestBody.addProperty("play_in_app", true);
-         requestBody.addProperty("speed", 1);
-         requestBody.addProperty("text", message);
-         requestBody.addProperty("play_in_app", true);
-         JsonArray voiceIdsArray = new JsonArray();
+         FriendlyByteBuf buf = PacketByteBufs.create();
 
-         for (String voiceId : character.voiceIds()) {
-            voiceIdsArray.add(voiceId);
+         buf.writeUtf(clientId);
+         buf.writeUtf(Player2HTTPUtils.awaitToken(controller.getOwner(), clientId));
+         buf.writeUtf(message);
+         buf.writeDouble(1);
+         buf.writeVarInt(character.voiceIds().length);
+         for (String id : character.voiceIds()) {
+            buf.writeUtf(id);
          }
 
-         requestBody.add("voice_ids", voiceIdsArray);
-         LOGGER.info("TTS request w/ msg={}", message);
-         Map<String, JsonElement> responseMap = sendRequest("/v1/tts/speak", true, requestBody);
-         onFinish.accept(responseMap);
+         ServerPlayNetworking.send((ServerPlayer) controller.getOwner(),
+               new ResourceLocation("playerengine", "stream_tts"), buf);
+         onFinish.accept(null);
       } catch (Exception var9) {
       }
    }
 
+   // public void textToSpeech(String message, Character character,
+   // Consumer<Map<String, JsonElement>> onFinish) {
+   // try {
+   // JsonObject requestBody = new JsonObject();
+   // requestBody.addProperty("speed", 1);
+   // requestBody.addProperty("text", message);
+   // requestBody.addProperty("audio_format", "mp3");
+   // JsonArray voiceIdsArray = new JsonArray();
+   //
+   // for (String voiceId : character.voiceIds()) {
+   // voiceIdsArray.add(voiceId);
+   // }
+   //
+   // requestBody.add("voice_ids", voiceIdsArray);
+   // LOGGER.info("TTS request w/ msg={}", message);
+   // Map<String, JsonElement> responseMap =
+   // Player2HTTPUtils.sendRequest(controller.getOwner(), clientId,"/v1/tts/speak",
+   // true, requestBody);
+   // onFinish.accept(responseMap);
+   // } catch (Exception var9) {
+   // }
+   // }
+
    public void startSTT() {
       JsonObject requestBody = new JsonObject();
-      requestBody.addProperty("timeout", 30);
+      requestBody.addProperty("timeout", 180);
 
       try {
-         sendRequest("/v1/stt/start", true, requestBody);
+         Player2HTTPUtils.sendRequest(controller.getOwner(), clientId, "/v1/stt/start", true, requestBody);
       } catch (Exception var3) {
          System.err.println("[Player2APIService/startSTT]: Error" + var3.getMessage());
       }
@@ -116,7 +154,8 @@ public class Player2APIService {
 
    public String stopSTT() {
       try {
-         Map<String, JsonElement> responseMap = sendRequest("/v1/stt/stop", true, null);
+         Map<String, JsonElement> responseMap = Player2HTTPUtils.sendRequest(controller.getOwner(), clientId,
+               "/v1/stt/stop", true, null);
          if (!responseMap.containsKey("text")) {
             throw new Exception("Could not find key 'text' in response");
          } else {
@@ -127,27 +166,20 @@ public class Player2APIService {
       }
    }
 
+   public void trySendHeartbeat() {
+      if (HeartbeatManager.shouldHeartbeat(controller.getOwnerUsername(), clientId)) {
+         sendHeartbeat();
+         HeartbeatManager.storeHeartbeatTime(controller.getOwnerUsername(), clientId);
+      }
+   }
+
    public void sendHeartbeat() {
       try {
-         System.out.println("Sending Heartbeat " + player2GameID);
-         Map<String, JsonElement> responseMap = sendRequest("/v1/health", false, null);
-         if (responseMap.containsKey("client_version")) {
-            System.out.println("Heartbeat Successful");
-         }
+         System.out.println("Sending Heartbeat " + clientId);
+         Player2HTTPUtils.sendRequest(controller.getOwner(), clientId, "/v1/health", false, null);
+         System.out.println("Heartbeat Successful");
       } catch (Exception var2) {
          System.err.printf("Heartbeat Fail: %s", var2.getMessage());
       }
-   }
-
-   public void player2ProcessConnection(HttpURLConnection connection) {
-      if (player2GameID != null) {
-         connection.setRequestProperty("player2-game-key", player2GameID);
-      }
-   }
-
-   public static Map<String, String> getHeaders(String player2Apikey){
-      Map<String, String> headers = new HashMap<>();
-      headers.put("player2-game-key", player2Apikey);
-      return headers;
    }
 }

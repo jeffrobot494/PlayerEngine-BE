@@ -1,6 +1,6 @@
 package baritone.process;
 
-import baritone.Automatone;
+import baritone.PlayerEngine;
 import baritone.Baritone;
 import baritone.api.entity.IInventoryProvider;
 import baritone.api.entity.LivingEntityInventory;
@@ -130,7 +130,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
          try {
             parsed = format.get().parse(new FileInputStream(schematic));
          } catch (Exception var7) {
-            Automatone.LOGGER.error(var7);
+            PlayerEngine.LOGGER.error(var7);
             return false;
          }
 

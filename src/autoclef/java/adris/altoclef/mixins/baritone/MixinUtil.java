@@ -1,6 +1,6 @@
 package adris.altoclef.mixins.baritone;
 
-import baritone.Automatone;
+import baritone.PlayerEngine;
 import java.util.concurrent.ExecutorService;
 import net.minecraft.Util;
 import org.spongepowered.asm.mixin.Mixin;
@@ -20,6 +20,6 @@ public abstract class MixinUtil {
       at = {@At("RETURN")}
    )
    private static void shutdownBaritoneExecutor(CallbackInfo ci) {
-      shutdownExecutor(Automatone.getExecutor());
+      shutdownExecutor(PlayerEngine.getExecutor());
    }
 }

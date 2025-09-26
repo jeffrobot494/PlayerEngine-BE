@@ -1,6 +1,6 @@
 package baritone.cache;
 
-import baritone.Automatone;
+import baritone.PlayerEngine;
 import baritone.api.BaritoneAPI;
 import baritone.api.cache.IContainerMemory;
 import baritone.api.cache.IRememberedInventory;
@@ -34,7 +34,7 @@ public class ContainerMemory implements IContainerMemory {
             }
          }
       } catch (Exception var7) {
-         Automatone.LOGGER.error(var7);
+         PlayerEngine.LOGGER.error(var7);
          this.inventories.clear();
       }
    }

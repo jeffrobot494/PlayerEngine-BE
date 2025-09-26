@@ -1,6 +1,6 @@
 package baritone.command.defaults;
 
-import baritone.Automatone;
+import baritone.PlayerEngine;
 import baritone.api.BaritoneAPI;
 import baritone.api.IBaritone;
 import baritone.api.Settings;
@@ -139,7 +139,7 @@ public class SetCommand extends Command {
                      try {
                         SettingsUtil.parseAndApply(settings, arg, newValue);
                      } catch (Throwable var19) {
-                        Automatone.LOGGER.error(var19);
+                        PlayerEngine.LOGGER.error(var19);
                         throw new CommandInvalidTypeException(args.consumed(), "a valid value", var19);
                      }
                   }

@@ -19,10 +19,10 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "baritone.Automatone"
+      "baritone.PlayerEngine"
     ],
     "client": [
-      "baritone.AutomatoneClient"
+      "adris.altoclef.PlayerEngineClient"
     ]
   },
   "mixins": [

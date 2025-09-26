@@ -1,6 +1,6 @@
 package baritone.event;
 
-import baritone.Automatone;
+import baritone.PlayerEngine;
 import baritone.Baritone;
 import baritone.api.event.events.BlockInteractEvent;
 import baritone.api.event.events.PathEvent;
@@ -23,7 +23,7 @@ public final class GameEventHandler implements IEventBus {
       try {
          this.baritone.bsi = new BlockStateInterface(this.baritone.getEntityContext());
       } catch (Exception var2) {
-         Automatone.LOGGER.error(var2);
+         PlayerEngine.LOGGER.error(var2);
          this.baritone.bsi = null;
       }
 

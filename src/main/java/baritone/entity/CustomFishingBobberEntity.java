@@ -1,6 +1,6 @@
 package baritone.entity;
 
-import baritone.Automatone;
+import baritone.PlayerEngine;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -22,8 +22,6 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MoverType;
-import net.minecraft.world.entity.Entity.MovementEmission;
-import net.minecraft.world.entity.Entity.RemovalReason;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
@@ -78,7 +76,7 @@ public class CustomFishingBobberEntity extends Projectile {
    }
 
    public CustomFishingBobberEntity(LivingEntity thrower, Level world, int luckOfTheSeaLevel, int lureLevel) {
-      this(Automatone.FISHING_BOBBER, world, luckOfTheSeaLevel, lureLevel);
+      this(PlayerEngine.FISHING_BOBBER, world, luckOfTheSeaLevel, lureLevel);
       this.setOwner(thrower);
       float f = thrower.getXRot();
       float g = thrower.getYRot();

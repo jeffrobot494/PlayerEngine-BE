@@ -1,6 +1,6 @@
 package baritone.behavior;
 
-import baritone.Automatone;
+import baritone.PlayerEngine;
 import baritone.Baritone;
 import baritone.api.behavior.IPathingBehavior;
 import baritone.api.event.events.PathEvent;
@@ -429,7 +429,7 @@ public final class PathingBehavior extends Behavior implements IPathingBehavior 
             }
 
             this.inProgress = pathfinder;
-            Automatone.getExecutor()
+            PlayerEngine.getExecutor()
                .execute(
                   () -> {
                      if (talkAboutIt) {

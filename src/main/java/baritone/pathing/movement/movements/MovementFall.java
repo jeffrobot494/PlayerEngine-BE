@@ -1,6 +1,6 @@
 package baritone.pathing.movement.movements;
 
-import baritone.Automatone;
+import baritone.PlayerEngine;
 import baritone.api.IBaritone;
 import baritone.api.entity.LivingEntityInventory;
 import baritone.api.pathing.movement.MovementStatus;
@@ -73,13 +73,13 @@ public class MovementFall extends Movement {
          if (!isWater && this.willPlaceBucket() && !playerFeet.equals(this.dest)) {
             LivingEntityInventory inventory = this.ctx.inventory();
             if (inventory == null
-               || !LivingEntityInventory.isValidHotbarIndex(InventoryBehavior.getSlotWithStack(inventory, Automatone.WATER_BUCKETS))
+               || !LivingEntityInventory.isValidHotbarIndex(InventoryBehavior.getSlotWithStack(inventory, PlayerEngine.WATER_BUCKETS))
                || this.ctx.world().dimensionType().ultraWarm()) {
                return state.setStatus(MovementStatus.UNREACHABLE);
             }
 
             if (this.ctx.entity().getY() - this.dest.getY() < this.ctx.playerController().getBlockReachDistance() && !this.ctx.entity().onGround()) {
-               inventory.selectedSlot = InventoryBehavior.getSlotWithStack(inventory, Automatone.WATER_BUCKETS);
+               inventory.selectedSlot = InventoryBehavior.getSlotWithStack(inventory, PlayerEngine.WATER_BUCKETS);
                targetRotation = new Rotation(toDest.getYaw(), 90.0F);
                if (this.ctx.isLookingAt(this.dest) || this.ctx.isLookingAt(this.dest.down())) {
                   state.setInput(Input.CLICK_RIGHT, true);
@@ -100,8 +100,8 @@ public class MovementFall extends Movement {
 
             state.setInput(Input.JUMP, true);
             LivingEntityInventory inventoryx = this.ctx.inventory();
-            if (inventoryx != null && LivingEntityInventory.isValidHotbarIndex(InventoryBehavior.getSlotWithStack(inventoryx, Automatone.EMPTY_BUCKETS))) {
-               inventoryx.selectedSlot = InventoryBehavior.getSlotWithStack(inventoryx, Automatone.EMPTY_BUCKETS);
+            if (inventoryx != null && LivingEntityInventory.isValidHotbarIndex(InventoryBehavior.getSlotWithStack(inventoryx, PlayerEngine.EMPTY_BUCKETS))) {
+               inventoryx.selectedSlot = InventoryBehavior.getSlotWithStack(inventoryx, PlayerEngine.EMPTY_BUCKETS);
                if (this.ctx.entity().getDeltaMovement().y >= 0.0) {
                   return state.setInput(Input.CLICK_RIGHT, true);
                }

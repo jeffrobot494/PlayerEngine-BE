@@ -1,6 +1,6 @@
 package baritone.pathing.calc;
 
-import baritone.Automatone;
+import baritone.PlayerEngine;
 import baritone.api.Settings;
 import baritone.api.pathing.calc.IPath;
 import baritone.api.pathing.calc.IPathFinder;
@@ -84,7 +84,7 @@ public abstract class AbstractNodeCostSearch implements IPathFinder {
             var8 = new PathCalculationResult(PathCalculationResult.Type.SUCCESS_TO_GOAL, var15);
          } catch (Exception var12) {
             this.context.baritone.logDirect("Pathing exception: " + var12);
-            Automatone.LOGGER.error("Pathing exception: ", var12);
+            PlayerEngine.LOGGER.error("Pathing exception: ", var12);
             return new PathCalculationResult(PathCalculationResult.Type.EXCEPTION);
          } finally {
             this.isFinished = true;
@@ -139,12 +139,12 @@ public abstract class AbstractNodeCostSearch implements IPathFinder {
                if (dist > 25.0) {
                   if (logInfo) {
                      if (COEFFICIENTS[i] >= 3.0) {
-                        Automatone.LOGGER.warn("Warning: cost coefficient is greater than three! Probably means that");
-                        Automatone.LOGGER.warn("the path I found is pretty terrible (like sneak-bridging for dozens of blocks)");
-                        Automatone.LOGGER.warn("But I'm going to do it anyway, because yolo");
+                        PlayerEngine.LOGGER.warn("Warning: cost coefficient is greater than three! Probably means that");
+                        PlayerEngine.LOGGER.warn("the path I found is pretty terrible (like sneak-bridging for dozens of blocks)");
+                        PlayerEngine.LOGGER.warn("But I'm going to do it anyway, because yolo");
                      }
 
-                     Automatone.LOGGER.info("Path goes for " + Math.sqrt(dist) + " blocks");
+                     PlayerEngine.LOGGER.info("Path goes for " + Math.sqrt(dist) + " blocks");
                      this.context.baritone.logDebug("A* cost coefficient " + COEFFICIENTS[i]);
                   }
 

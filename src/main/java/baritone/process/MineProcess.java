@@ -1,6 +1,6 @@
 package baritone.process;
 
-import baritone.Automatone;
+import baritone.PlayerEngine;
 import baritone.Baritone;
 import baritone.api.entity.LivingEntityInventory;
 import baritone.api.pathing.goals.Goal;
@@ -69,7 +69,7 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
       if (this.desiredQuantity > 0) {
          LivingEntityInventory inventory = this.ctx.inventory();
          int curr = inventory == null ? -1 : inventory.main.stream().filter(stack -> this.filter.has(stack)).mapToInt(ItemStack::getCount).sum();
-         Automatone.LOGGER.debug("Currently have " + curr + " valid items");
+         PlayerEngine.LOGGER.debug("Currently have " + curr + " valid items");
          if (curr >= this.desiredQuantity) {
             this.logDirect("Have " + curr + " valid items");
             this.cancel();
@@ -107,7 +107,7 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
          List<BlockPos> curr = new ArrayList<>(this.knownOreLocations);
          if (mineGoalUpdateInterval != 0 && this.tickCount++ % mineGoalUpdateInterval == 0) {
             CalculationContext context = new CalculationContext(this.baritone, true);
-            Automatone.getExecutor().execute(() -> this.rescan(curr, context));
+            PlayerEngine.getExecutor().execute(() -> this.rescan(curr, context));
          }
 
          if (this.baritone.settings().legitMine.get()) {
